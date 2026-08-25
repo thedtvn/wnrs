@@ -19,7 +19,7 @@ interface GameProps {
 }
 
 export default function Game({ route, onExit }: GameProps) {
-  const { user, instanceId, jwt, mode } = useDiscord()
+  const { user, instanceId, jwt, mode, closeActivity } = useDiscord()
   const { t, locale } = useLocale()
   const roomId = instanceId ? `discord:${instanceId}` : `web:${route.seed}`
   const sync = useGameSync(roomId, user, jwt)
@@ -28,10 +28,25 @@ export default function Game({ route, onExit }: GameProps) {
   const amHost = state?.hostId === user?.id
   const isSpectator = state?.spectatorIds.includes(user?.id ?? '') ?? false
 
+  const pendingJoinNext = useRef(false)
+  const [endConfirm, setEndConfirm] = useState(false)
   const wasInLobby = useRef(false)
   const [midgameChoice, setMidgameChoice] = useState<'pending' | 'spectate' | 'leave'>('pending')
 
   if (state?.phase === 'lobby') wasInLobby.current = true
+
+  useEffect(() => {
+    if (!sync.fatalError || mode !== 'discord') return
+    const id = setTimeout(() => closeActivity('Connection lost. Please reopen the Activity.', 3000), 2500)
+    return () => clearTimeout(id)
+  }, [sync.fatalError, mode, closeActivity])
+
+  useEffect(() => {
+    if (state?.phase === 'scoring' && pendingJoinNext.current) {
+      pendingJoinNext.current = false
+      sync.sendUnspectate()
+    }
+  }, [state?.phase, sync])
 
   const showMidgameGate = state && state.phase !== 'lobby' && !wasInLobby.current && midgameChoice === 'pending'
 
@@ -74,6 +89,14 @@ export default function Game({ route, onExit }: GameProps) {
             </Box>
           </Flex>
 
+          <Button
+            width="full"
+            variant="secondary"
+            onClick={() => { pendingJoinNext.current = true; setMidgameChoice('spectate') }}
+          >
+            {t('lobby.joinNextRound')}
+          </Button>
+
           <Button width="full" onClick={() => setMidgameChoice('spectate')}>
             {t('midgame.joinSpectate')}
           </Button>
@@ -87,37 +110,59 @@ export default function Game({ route, onExit }: GameProps) {
   }
 
   return (
-    <Flex as="main" h="full" direction="column" bg="bg.canvas">
-      <Flex direction="column" alignItems="center" flex="1" overflow="hidden">
-        <Stack
-          w="full"
-          maxW={{ base: 'lg', md: '2xl' }}
-          alignItems="center"
-          gap="4"
-          padding={{ base: '4', sm: '6', md: '8' }}
-          flex="1"
-          overflowY="auto"
-        >
-          {state.phase === 'lobby' && (
-            <LobbyPhase state={state} sync={sync} amHost={amHost} isSpectator={isSpectator} userId={user?.id} t={t} locale={locale} />
-          )}
-          {state.phase === 'answering' && (
-            <AnsweringPhase state={state} sync={sync} amHost={amHost} isSpectator={isSpectator} t={t} />
-          )}
-          {state.phase === 'revealing' && (
-            <RevealingPhase state={state} sync={sync} amHost={amHost} t={t} />
-          )}
-          {state.phase === 'rating' && (
-            <RatingPhase state={state} sync={sync} isSpectator={isSpectator} userId={user?.id} t={t} />
-          )}
-          {state.phase === 'scoring' && (
-            <ScoringPhase state={state} sync={sync} amHost={amHost} t={t} />
-          )}
-          {state.phase === 'finished' && (
-            <FinishedPhase state={state} onExit={onExit} t={t} />
-          )}
-        </Stack>
-      </Flex>
+    <Flex
+      as="main"
+      h="full"
+      alignItems="center"
+      justifyContent="center"
+      bg="bg.canvas"
+      padding={{ base: '3', sm: '4', md: '6' }}
+    >
+      <Box
+        w="full"
+        maxW={{ base: 'full', sm: 'md', md: '2xl' }}
+        maxH="full"
+        overflowY="auto"
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        gap="4"
+        padding={{ base: '4', sm: '5', md: '6' }}
+      >
+        {amHost && ['answering', 'revealing', 'rating', 'scoring'].includes(state.phase) && (
+          <Box w="full" display="flex" justifyContent="flex-end">
+            {endConfirm ? (
+              <Flex gap="2" alignItems="center" wrap="wrap" justify="flex-end">
+                <Text fontSize="xs" color="fg.muted" m={0}>{t('lobby.endGameConfirm')}</Text>
+                <Button size="sm" onClick={() => sync.sendEndGame()}>{t('lobby.endGame')}</Button>
+                <Button variant="ghost" size="sm" onClick={() => setEndConfirm(false)}>{t('common.cancel')}</Button>
+              </Flex>
+            ) : (
+              <Button variant="ghost" size="sm" color="fg.muted" onClick={() => setEndConfirm(true)}>
+                {t('lobby.endGame')}
+              </Button>
+            )}
+          </Box>
+        )}
+        {state.phase === 'lobby' && (
+          <LobbyPhase state={state} sync={sync} amHost={amHost} isSpectator={isSpectator} userId={user?.id} t={t} locale={locale} />
+        )}
+        {state.phase === 'answering' && (
+          <AnsweringPhase state={state} sync={sync} amHost={amHost} isSpectator={isSpectator} t={t} />
+        )}
+        {state.phase === 'revealing' && (
+          <RevealingPhase state={state} sync={sync} amHost={amHost} t={t} />
+        )}
+        {state.phase === 'rating' && (
+          <RatingPhase state={state} sync={sync} isSpectator={isSpectator} userId={user?.id} t={t} />
+        )}
+        {state.phase === 'scoring' && (
+          <ScoringPhase state={state} sync={sync} amHost={amHost} t={t} />
+        )}
+        {state.phase === 'finished' && (
+          <FinishedPhase state={state} onExit={onExit} t={t} />
+        )}
+      </Box>
     </Flex>
   )
 }

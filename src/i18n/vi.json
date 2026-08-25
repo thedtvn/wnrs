@@ -15,6 +15,12 @@
     "decks": "Bộ bài",
     "transferHost": "Chuyển chủ phòng",
     "makeHost": "Đặt làm chủ phòng",
+    "confirmTransfer": "Chuyển chủ phòng cho",
+    "endGame": "Kết thúc trò chơi",
+    "endGameConfirm": "Kết thúc trò chơi cho tất cả mọi người?",
+    "joinNextRound": "Tham gia vòng tiếp theo",
+    "readyLocked": "Bạn đã sẵn sàng",
+    "makeHost": "Đặt làm chủ phòng",
     "level": "Cấp",
     "levelAll": "Tất cả cấp"
   },
@@ -69,6 +75,7 @@
     "connected": "Đã kết nối",
     "disconnected": "Mất kết nối",
     "save": "Lưu",
+    "cancel": "Hủy",
     "close": "Đóng"
   },
   "midgame": {

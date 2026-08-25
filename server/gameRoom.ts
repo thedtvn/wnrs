@@ -189,7 +189,7 @@ const KNOWN_TYPES = new Set([
   'join', 'start', 'setSettings', 'ready', 'unready',
   'spectate', 'unspectate', 'transferHost',
   'submitAnswer', 'revealNext', 'rateAnswer',
-  'nextQuestion',
+  'nextQuestion', 'endGame',
 ])
 
 const isKnownMessage = (payload: unknown): payload is ClientMessage =>

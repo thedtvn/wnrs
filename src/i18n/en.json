@@ -15,6 +15,12 @@
     "decks": "Decks",
     "transferHost": "Transfer Host",
     "makeHost": "Make Host",
+    "confirmTransfer": "Transfer host to",
+    "endGame": "End Game",
+    "endGameConfirm": "End the game for everyone?",
+    "joinNextRound": "Join Next Round",
+    "readyLocked": "You are ready",
+    "makeHost": "Make Host",
     "level": "Level",
     "levelAll": "All Levels"
   },
@@ -69,6 +75,7 @@
     "connected": "Connected",
     "disconnected": "Disconnected",
     "save": "Save",
+    "cancel": "Cancel",
     "close": "Close"
   },
   "midgame": {

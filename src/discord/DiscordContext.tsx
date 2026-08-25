@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { DiscordSDK } from '@discord/embedded-app-sdk'
+import { DiscordSDK, RPCCloseCodes } from '@discord/embedded-app-sdk'
 import type { PlayerInfo } from '@src/shared/types'
 
 export type DiscordMode = 'connecting' | 'discord' | 'standalone'
@@ -12,7 +12,7 @@ interface DiscordContextValue {
   channelId: string | null
   error: string | null
   jwt: string | null
-  closeActivity: () => void
+  closeActivity: (reason?: string, code?: number) => void
 }
 
 const DiscordContext = createContext<DiscordContextValue>({
@@ -66,11 +66,18 @@ export function DiscordProvider({ children }: { children: ReactNode }) {
   const sdkRef = useRef<DiscordSDK | null>(null)
   const setupStarted = useRef(false)
 
-  const closeActivity = useCallback(() => {
+  const closeActivity = useCallback((reason?: string, code?: number) => {
     try {
-      window.close()
+      sdkRef.current?.close(
+        (code ?? RPCCloseCodes.CLOSE_NORMAL) as RPCCloseCodes,
+        reason ?? 'You exited from app',
+      )
     } catch {
-      // cross-origin iframe — ignore
+      try {
+        window.close()
+      } catch {
+        // cross-origin iframe — nothing else to do
+      }
     }
   }, [])
 

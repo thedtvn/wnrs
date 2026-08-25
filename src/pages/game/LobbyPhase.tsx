@@ -4,6 +4,7 @@ import { Button } from '@src/components/ui/button'
 import { Avatar } from '@src/components/ui/avatar'
 import { DeckSelector } from '@src/components/DeckSelector'
 import { DECK_REGISTRY } from '@src/decks/registry'
+import { PlayerCircleGrid } from './PlayerCircleGrid'
 import type { useGameSync } from '@src/hooks/useGameSync'
 import type { GameState, GameSettings } from '@src/shared/types'
 
@@ -19,6 +20,7 @@ export function LobbyPhase({
   locale: 'en' | 'vi'
 }) {
   const [showSettings, setShowSettings] = useState(false)
+  const [confirmTarget, setConfirmTarget] = useState<string | null>(null)
   const [settings, setSettings] = useState<GameSettings>(state.settings)
 
   const allReady = state.players
@@ -37,90 +39,73 @@ export function LobbyPhase({
     </Box>
   )
 
-  const MAX_CIRCLES = 11
-  const visiblePlayers = state.players.slice(0, MAX_CIRCLES)
-  const extraCount = state.players.length - visiblePlayers.length
-
   const playersCircleGrid = (
-    <Flex w="full" wrap="wrap" justify="center" gap={{ base: '4', lg: '6' }}>
-      {visiblePlayers.map(p => {
+    <PlayerCircleGrid
+      players={state.players}
+      maxVisible={8}
+      moreLabel={n => `${n} ${t('midgame.players')}`}
+      badge={p =>
+        p.id === state.hostId ? (
+          <Badge borderRadius="full" px="2" fontSize="10px" fontWeight="semibold" bg="accent.subtle" color="accent.fg">
+            {t('common.host')}
+          </Badge>
+        ) : state.readyIds.includes(p.id) ? (
+          <Badge borderRadius="full" px="2" fontSize="10px" fontWeight="semibold" bg="success.subtle" color="success.fg">
+            ✓
+          </Badge>
+        ) : null
+      }
+      circleOverlay={p => {
         const canTransfer = amHost && p.id !== state.hostId && !state.spectatorIds.includes(p.id)
+        if (!canTransfer) return null
+        if (confirmTarget === p.id) {
+          return (
+            <Flex
+              position="absolute"
+              inset="-10px -14px auto -14px"
+              zIndex={5}
+              direction="column"
+              gap="1"
+              bg="surface"
+              borderWidth="1px"
+              borderColor="border.subtle"
+              borderRadius="l2"
+              p="2"
+              boxShadow="lg"
+            >
+              <Text fontSize="10px" color="fg.default" m={0} textAlign="center" lineClamp={2}>
+                {t('lobby.confirmTransfer')} {p.name}?
+              </Text>
+              <Flex gap="1" justify="center">
+                <Button size="sm" px="2" onClick={() => { sync.sendTransferHost(p.id); setConfirmTarget(null) }}>
+                  ✓
+                </Button>
+                <Button variant="ghost" size="sm" px="2" onClick={() => setConfirmTarget(null)}>
+                  ✕
+                </Button>
+              </Flex>
+            </Flex>
+          )
+        }
         return (
-          <Box
-            key={p.id}
-            position="relative"
-            role="group"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            gap="1"
-            width="96px"
+          <Button
+            variant="secondary"
+            size="sm"
+            position="absolute"
+            inset="0"
+            opacity={0}
+            _groupHover={{ opacity: 1 }}
+            _focusVisible={{ opacity: 1 }}
+            transition="opacity 150ms"
+            onClick={() => setConfirmTarget(p.id)}
+            aria-label={`${t('lobby.makeHost')}: ${p.name}`}
           >
-            <Avatar name={p.name} avatar={p.avatar} size="xl" />
-            <Text color="fg.default" fontSize="xs" lineClamp={1} m={0} textAlign="center" maxW="96px">
-              {p.name}
-            </Text>
-            {p.id === state.hostId ? (
-              <Badge
-                borderRadius="full"
-                px="2"
-                fontSize="10px"
-                fontWeight="semibold"
-                bg="accent.subtle"
-                color="accent.fg"
-              >
-                {t('common.host')}
-              </Badge>
-            ) : state.readyIds.includes(p.id) ? (
-              <Badge
-                borderRadius="full"
-                px="2"
-                fontSize="10px"
-                fontWeight="semibold"
-                bg="success.subtle"
-                color="success.fg"
-              >
-                ✓
-              </Badge>
-            ) : null}
-            {canTransfer && (
-              <Button
-                variant="secondary"
-                size="sm"
-                opacity={0}
-                _groupHover={{ opacity: 1 }}
-                _focusVisible={{ opacity: 1 }}
-                transition="opacity 150ms"
-                onClick={() => sync.sendTransferHost(p.id)}
-                aria-label={`${t('lobby.makeHost')}: ${p.name}`}
-              >
-                {t('lobby.makeHost')}
-              </Button>
-            )}
-          </Box>
+            {t('lobby.makeHost')}
+          </Button>
         )
-      })}
-      {extraCount > 0 && (
-        <Box display="flex" flexDirection="column" alignItems="center" gap="1" width="96px">
-          <Flex
-            boxSize="80px"
-            borderRadius="full"
-            borderWidth="2px"
-            borderColor="whiteAlpha.300"
-            bg="surface"
-            alignItems="center"
-            justifyContent="center"
-          >
-            <Text color="fg.default" fontSize="2xl" fontWeight="bold" m={0}>+{extraCount}</Text>
-          </Flex>
-          <Text color="fg.muted" fontSize="xs" m={0}>
-            {extraCount} {t('midgame.players')}
-          </Text>
-        </Box>
-      )}
-    </Flex>
+      }}
+    />
   )
-
   const selectedDeckPills = (
     <Flex wrap="wrap" justify="center" gap="2">
       {selectedDecks.map(slug => {
@@ -132,7 +117,7 @@ export function LobbyPhase({
             py="1"
             borderRadius="12px"
             bg="surface.raised"
-            fontSize="xs"
+            fontSize="sm"
             color="fg.default"
           >
             {deck ? t(deck.nameKey) : slug}
@@ -163,7 +148,7 @@ export function LobbyPhase({
                 borderRadius="full"
                 px="2.5"
                 py="1"
-                fontSize="xs"
+                fontSize="sm"
                 fontWeight="semibold"
                 bg={
                   p.id === state.hostId ? 'accent.subtle'
@@ -192,7 +177,7 @@ export function LobbyPhase({
                 _focusVisible={{ opacity: 1 }}
                 transition="opacity 150ms"
                 bg="surface.raised"
-                onClick={() => sync.sendTransferHost(p.id)}
+                onClick={() => setConfirmTarget(confirmTarget === p.id ? null : p.id)}
                 aria-label={`${t('lobby.makeHost')}: ${p.name}`}
               >
                 {t('lobby.makeHost')}
@@ -275,7 +260,7 @@ export function LobbyPhase({
           </Text>
         </Stack>
 
-        <Button width="full" onClick={() => sync.sendSetSettings(settings)}>
+        <Button width="full" onClick={() => { sync.sendSetSettings(settings); setShowSettings(false) }}>
           {t('common.save')}
         </Button>
       </Stack>

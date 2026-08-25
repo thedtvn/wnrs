@@ -82,6 +82,7 @@ describe('type surface', () => {
       players: [],
       readyIds: [],
       spectatorIds: [],
+    spectatorInfos: [],
       disconnectedIds: [],
       settings: { selectedDecks: ['main'], seed: 's', answerSeconds: 60, ratingSeconds: 30, totalRounds: 10, locale: 'en' },
       round: null,

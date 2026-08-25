@@ -31,6 +31,7 @@ export const createInitialState = (): GameState => ({
   readyIds: [],
   spectatorIds: [],
   disconnectedIds: [],
+  spectatorInfos: [],
   settings: {
     selectedDecks: ['main'],
     seed: Math.random().toString(36).slice(2, 10),
@@ -78,6 +79,8 @@ export const handleClientMessage = (
       return revealNext(state, senderId, now)
     case 'rateAnswer':
       return rateAnswer(state, senderId, msg.targetId, msg.rating)
+    case 'endGame':
+      return endGame(state, senderId)
     case 'nextQuestion':
       return nextQuestion(state, senderId, now)
     default:
@@ -131,6 +134,8 @@ export const eligiblePlayers = (s: GameState): string[] =>
 
 function join(state: GameState, userId: string, name: string, avatar?: string): EngineResult {
   const existing = state.players.find(p => p.id === userId)
+  const spectating = state.spectatorIds.includes(userId)
+  const info: PlayerInfo = { id: userId, name, avatar }
   let next: GameState
   if (existing) {
     next = {
@@ -140,14 +145,25 @@ function join(state: GameState, userId: string, name: string, avatar?: string): 
       ),
       disconnectedIds: state.disconnectedIds.filter(id => id !== userId),
     }
+    if (state.phase !== 'lobby') {
+      next = {
+        ...next,
+        players: next.players.filter(p => p.id !== userId),
+        spectatorIds: [...next.spectatorIds, userId],
+        spectatorInfos: [...next.spectatorInfos.filter(s => s.id !== userId), info],
+      }
+    }
+  } else if (state.phase !== 'lobby') {
+    next = {
+      ...state,
+      spectatorIds: [...state.spectatorIds, userId],
+      spectatorInfos: [...state.spectatorInfos, info],
+    }
   } else {
     next = {
       ...state,
-      players: [...state.players, { id: userId, name, avatar }],
+      players: [...state.players, info],
       hostId: state.hostId ?? userId,
-      spectatorIds: state.phase !== 'lobby'
-        ? [...state.spectatorIds, userId]
-        : state.spectatorIds,
     }
   }
   return { state: bumpVersion(next) }
@@ -170,10 +186,13 @@ function unready(state: GameState, senderId: string): GameState | null {
 function spectate(state: GameState, senderId: string): GameState | null {
   if (state.phase !== 'lobby') return null // no mid-game toggling
   if (isSpectator(state, senderId)) return state
+  const info = state.players.find(p => p.id === senderId)
+  if (!info) return state
   return {
     ...state,
     players: state.players.filter(p => p.id !== senderId),
     spectatorIds: [...state.spectatorIds, senderId],
+    spectatorInfos: [...state.spectatorInfos, info],
     readyIds: state.readyIds.filter(id => id !== senderId),
   }
 }
@@ -181,15 +200,31 @@ function spectate(state: GameState, senderId: string): GameState | null {
 function unspectate(state: GameState, senderId: string): GameState | null {
   if (state.phase !== 'lobby' && state.phase !== 'scoring') return null
   if (!isSpectator(state, senderId)) return state
-  const info = state.players.find(p => p.id === senderId)
-    ?? state.spectatorIds.includes(senderId)
-      ? { id: senderId, name: senderId } // shouldn't happen, but safe fallback
-      : null
-  if (!info) return state
+  const info = state.spectatorInfos.find(p => p.id === senderId)
+    ?? state.players.find(p => p.id === senderId)
+    ?? { id: senderId, name: senderId }
   return {
     ...state,
-    players: [...state.players, info as { id: string; name: string }],
+    players: [...state.players, info],
     spectatorIds: state.spectatorIds.filter(id => id !== senderId),
+    spectatorInfos: state.spectatorInfos.filter(p => p.id !== senderId),
+  }
+}
+
+/** host-only: abort the current game and jump to the finished screen */
+function endGame(state: GameState, senderId: string): EngineResult {
+  if (senderId !== state.hostId) return { state, error: 'not host' }
+  if (state.phase === 'lobby' || state.phase === 'finished') {
+    return { state, error: 'not in game' }
+  }
+  return {
+    state: bumpVersion({
+      ...state,
+      phase: 'finished',
+      round: state.round
+        ? { ...state.round, deadline: null, currentRevealId: null }
+        : null,
+    }),
   }
 }
 

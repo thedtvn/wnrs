@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Box, Button as ChakraButton, Stack, Text, Textarea } from '@chakra-ui/react'
 import { Button } from '@src/components/ui/button'
-import { CardDraw } from '@src/components/card3d'
 import { useDiscord } from '@src/discord/DiscordContext'
 import type { useGameSync } from '@src/hooks/useGameSync'
 import type { GameState } from '@src/shared/types'
 import { TimerBar } from './TimerBar'
 import { QuestionCard } from './QuestionCard'
 import { useCountdown } from './useCountdown'
+
+const CARD_IN_CSS = `
+  @keyframes card-in {
+    from { transform: translateY(28px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+`
 
 export function AnsweringPhase({
   state, sync, amHost, isSpectator, t,
@@ -36,47 +42,28 @@ export function AnsweringPhase({
   const answeredCount = Object.keys(state.round?.answers ?? {}).length
 
   const prevRoundNumber = useRef<number | null>(null)
-  const [showDraw, setShowDraw] = useState(false)
+  const [drawKey, setDrawKey] = useState(0)
 
   useEffect(() => {
     if (state.phase !== 'answering') return
     if (prevRoundNumber.current === state.roundNumber) return
     prevRoundNumber.current = state.roundNumber
-    setShowDraw(true)
+    setDrawKey(k => k + 1)
   }, [state.phase, state.roundNumber])
 
   return (
     <Stack align="center" gap="4" w="full">
-      <TimerBar timeLeft={timeLeft} total={total} />
+      {!hasSubmitted && !submitted && <TimerBar timeLeft={timeLeft} total={total} />}
 
+      <style>{CARD_IN_CSS}</style>
       <Box
-        position="relative"
+        key={drawKey}
         w="full"
         maxW={{ base: '260px', md: '300px' }}
         mx="auto"
-        overflow="hidden"
-        borderRadius="22px"
-        visibility={showDraw ? 'hidden' : 'visible'}
+        style={drawKey > 0 ? { animation: 'card-in 700ms ease-out both' } : undefined}
       >
         <QuestionCard question={state.round?.question ?? ''} />
-        {showDraw && (
-          <Box
-            data-testid="card-draw-overlay"
-            position="absolute"
-            inset="0"
-            overflow="hidden"
-            borderRadius="l3"
-            pointerEvents="none"
-            zIndex={10}
-            aria-hidden="true"
-          >
-            <CardDraw
-              question={state.round?.question ?? ''}
-              durationMs={2800}
-              onDone={() => setShowDraw(false)}
-            />
-          </Box>
-        )}
       </Box>
 
       {isSpectator ? (

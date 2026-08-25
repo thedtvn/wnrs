@@ -7,6 +7,7 @@ export interface GameSync {
   state: GameState | null
   connected: boolean
   error: string | null
+  fatalError: boolean
   clockOffset: number
   sendReady: () => void
   sendUnready: () => void
@@ -19,16 +20,19 @@ export interface GameSync {
   sendRevealNext: () => void
   sendRateAnswer: (targetId: string, rating: number) => void
   sendNextQuestion: () => void
+  sendEndGame: () => void
 }
 
 export function useGameSync(roomId: string, user: PlayerInfo | null, jwt?: string | null): GameSync {
   const [state, setState] = useState<GameState | null>(null)
   const [connected, setConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fatalError, setFatalError] = useState(false)
   const socketRef = useRef<Socket | null>(null)
   const clockOffsetRef = useRef(0)
   const [clockOffset, setClockOffset] = useState(0)
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const connectErrorsRef = useRef(0)
 
   useEffect(() => {
     if (!roomId) return
@@ -47,12 +51,16 @@ export function useGameSync(roomId: string, user: PlayerInfo | null, jwt?: strin
 
     socket.on('connect', () => {
       setConnected(true)
+      connectErrorsRef.current = 0
     })
+    socket.on('reconnect_failed', () => setFatalError(true))
     socket.on('disconnect', () => {
       setConnected(false)
     })
     socket.on('connect_error', (err) => {
       console.error('[Socket.IO] connection error:', err.message)
+      connectErrorsRef.current += 1
+      if (connectErrorsRef.current >= 5) setFatalError(true)
       setError(`Connection failed: ${err.message}`)
     })
     socket.on('state', (msg: { state: GameState }) => setState(msg.state))
@@ -91,6 +99,7 @@ export function useGameSync(roomId: string, user: PlayerInfo | null, jwt?: strin
     state,
     connected,
     error,
+    fatalError,
     clockOffset,
     sendReady: () => emit({ type: 'ready' }),
     sendUnready: () => emit({ type: 'unready' }),
@@ -103,5 +112,6 @@ export function useGameSync(roomId: string, user: PlayerInfo | null, jwt?: strin
     sendRevealNext: () => emit({ type: 'revealNext' }),
     sendRateAnswer: (targetId, rating) => emit({ type: 'rateAnswer', targetId, rating }),
     sendNextQuestion: () => emit({ type: 'nextQuestion' }),
+  sendEndGame: () => emit({ type: 'endGame' }),
   }
 }

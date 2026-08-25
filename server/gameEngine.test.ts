@@ -55,8 +55,18 @@ describe('lobby', () => {
   it('late join during game auto-joins as spectator', () => {
     let s = startGame(lobbyWith(p1, p2), 1000)
     s = handleClientMessage(s, { type: 'join', user: p3 }, 'p3', 2000).state
-    expect(s.players.map(p => p.id)).toContain('p3')
+    expect(s.players.map(p => p.id)).not.toContain('p3')
     expect(s.spectatorIds).toContain('p3')
+    expect(s.spectatorInfos.find(p => p.id === 'p3')?.name).toBe('Charlie')
+  })
+
+  it('all players submitting auto-advances to revealing without host action', () => {
+    let s = startGame(lobbyWith(p1, p2), 1000)
+    expect(s.phase).toBe('answering')
+    s = handleClientMessage(s, { type: 'submitAnswer', answer: 'a1' }, 'p1', 2000).state
+    expect(s.phase).toBe('answering')
+    s = handleClientMessage(s, { type: 'submitAnswer', answer: 'a2' }, 'p2', 2000).state
+    expect(s.phase).toBe('revealing')
   })
 
   it('ready / unready toggles readiness', () => {
@@ -84,6 +94,36 @@ describe('lobby', () => {
     expect(s.spectatorIds).not.toContain('p2')
   })
 
+  it('spectate preserves real name; unspectate restores it', () => {
+    let s = lobbyWith(p1, p2)
+    s = handleClientMessage(s, { type: 'spectate' }, 'p2', 0).state
+    expect(s.players.find(p => p.id === 'p2')).toBeUndefined()
+    expect(s.spectatorInfos.find(p => p.id === 'p2')?.name).toBe('Bob')
+    s = handleClientMessage(s, { type: 'unspectate' }, 'p2', 0).state
+    expect(s.players.find(p => p.id === 'p2')?.name).toBe('Bob')
+    expect(s.spectatorInfos).toHaveLength(0)
+  })
+
+  it('midgame join goes to spectators, not eligible players', () => {
+    let s = lobbyWith(p1, p2)
+    s = handleClientMessage(s, { type: 'ready' }, 'p2', 0).state
+    s = handleClientMessage(s, { type: 'start' }, 'p1', 0).state
+    s = handleClientMessage(s, { type: 'join', user: { id: 'p3', name: 'P3' } }, 'p3', 0).state
+    expect(s.spectatorIds).toContain('p3')
+    expect(s.players.find(p => p.id === 'p3')).toBeUndefined()
+  })
+
+  it('endGame: host can end, non-host cannot, lobby rejected', () => {
+    let s = lobbyWith(p1, p2)
+    s = handleClientMessage(s, { type: 'ready' }, 'p2', 0).state
+    s = handleClientMessage(s, { type: 'start' }, 'p1', 0).state
+    const r1 = handleClientMessage(s, { type: 'endGame' }, 'p2', 0)
+    expect(r1.error).toBe('not host')
+    const r2 = handleClientMessage(r1.state, { type: 'endGame' }, 'p1', 0)
+    expect(r2.state.phase).toBe('finished')
+    const r3 = handleClientMessage(r2.state, { type: 'endGame' }, 'p1', 0)
+    expect(r3.error).toBe('not in game')
+  })
   it('spectator can join as player during scoring phase', () => {
     let s = lobbyWith(p1, p2)
     s = handleClientMessage(s, { type: 'ready' }, 'p2', 0).state

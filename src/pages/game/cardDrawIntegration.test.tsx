@@ -4,7 +4,6 @@ import { AnsweringPhase } from './AnsweringPhase'
 import { answeringState } from './__fixtures__/state'
 import type { useGameSync } from '@src/hooks/useGameSync'
 
-vi.mock('@src/components/card3d/CardDrawCanvas', () => ({ default: () => null }))
 vi.mock('@src/discord/DiscordContext', () => ({
   useDiscord: () => ({ user: { id: 'p1', name: 'P1' }, instanceId: null, jwt: null, mode: 'web' }),
 }))
@@ -18,49 +17,44 @@ const makeSync = () =>
     sendRevealNext: vi.fn(),
   }) as unknown as ReturnType<typeof useGameSync>
 
-function renderComponent(stateOverrides?: { roundNumber?: number }) {
+function renderComponent(roundNumber = 1) {
   const sync = makeSync()
-  let state = answeringState()
-  if (stateOverrides?.roundNumber !== undefined) {
-    state = { ...state, roundNumber: stateOverrides.roundNumber }
-    state.round = { ...state.round!, question: 'New Question' }
-  }
+  const state = { ...answeringState(), roundNumber }
   const utils = renderWithChakra(
     <AnsweringPhase state={state} sync={sync} amHost={false} isSpectator={false} t={t} />,
   )
-  return { ...utils, sync }
+  const cardBox = utils.container.querySelector('div[style*="card-in"]') as HTMLElement
+  return { ...utils, sync, cardBox }
 }
-
-const overlays = () => document.querySelectorAll('[data-testid="card-draw-overlay"]')
 
 afterEach(() => cleanup())
 
-describe('cardDrawIntegration', () => {
-  it('1. mounts CardDraw when a new roundNumber enters answering phase', () => {
-    renderComponent()
-    expect(overlays().length).toBeGreaterThan(0)
-    const overlay = overlays()[0] as HTMLElement
-    expect(getComputedStyle(overlay).pointerEvents).toBe('none')
-    expect(screen.getAllByText('What is your favourite colour?').length).toBeGreaterThan(1)
+describe('card draw animation (CSS)', () => {
+  it('1. applies the card-in animation when a round enters answering', () => {
+    const { cardBox } = renderComponent()
+    expect(cardBox).not.toBeNull()
+    expect(cardBox.style.animation).toContain('card-in')
   })
 
-  it('2. does NOT remount/retrigger on unrelated re-render within same round', () => {
+  it('2. keeps exactly one animated card on unrelated re-renders within the same round', () => {
     const first = renderComponent()
-    const state = { ...answeringState(), round: { ...answeringState().round!, answers: { p1: 'a', p2: 'b' } } }
+    const state = { ...answeringState(), round: { ...answeringState().round!, answers: { p1: 'a' } } }
     first.rerender(<AnsweringPhase state={state} sync={makeSync()} amHost={false} isSpectator={false} t={t} />)
-    expect(overlays().length).toBe(1)
+    const boxes = first.container.querySelectorAll('div[style*="card-in"]')
+    expect(boxes.length).toBe(1)
+    expect(screen.getAllByText('What is your favourite colour?').length).toBe(1)
   })
 
   it('3. replays when roundNumber increments', () => {
     const first = renderComponent()
     first.unmount()
     cleanup()
-    renderComponent({ roundNumber: 2 })
-    expect(overlays().length).toBeGreaterThan(0)
-    expect(screen.getAllByText('New Question').length).toBeGreaterThan(1)
+    const second = renderComponent(2)
+    expect(second.cardBox).not.toBeNull()
+    expect(second.cardBox.style.animation).toContain('card-in')
   })
 
-  it('4. keeps textarea enabled and submittable while overlay mounted', () => {
+  it('4. keeps textarea enabled and submittable while animating', () => {
     const { sync } = renderComponent()
     const textbox = screen.getByRole('textbox')
     expect(textbox).not.toBeDisabled()
@@ -69,43 +63,33 @@ describe('cardDrawIntegration', () => {
     expect(sync.sendSubmitAnswer).toHaveBeenCalledWith('My answer')
   })
 
-  it('5. keeps host skip clickable while overlay mounted', () => {
+  it('5. keeps host skip clickable while animating', () => {
     const sync = makeSync()
     renderWithChakra(
       <AnsweringPhase state={answeringState()} sync={sync} amHost={true} isSpectator={false} t={t} />,
     )
     const skip = screen.getByRole('button', { name: 'answering.skipToReveal' })
-    expect(skip).not.toBeDisabled()
     fireEvent.click(skip)
     expect(sync.sendRevealNext).toHaveBeenCalled()
   })
 
-  it('6. unmounts overlay after onDone fires', () => {
-    vi.useFakeTimers()
-    try {
-      renderComponent()
-      expect(overlays().length).toBe(1)
-      act(() => { vi.advanceTimersByTime(2800) })
-      expect(overlays().length).toBe(0)
-    } finally {
-      vi.useRealTimers()
-    }
+  it('6. animation declares its full duration with fill mode', () => {
+    const { cardBox } = renderComponent()
+    expect(cardBox.style.animation).toContain('700ms')
+    expect(cardBox.style.animation).toContain('both')
   })
 
-  it('7. overlay container has pointer-events none and aria-hidden', () => {
+  it('7. question text renders inside the animated card', () => {
     renderComponent()
-    const overlay = overlays()[0] as HTMLElement
-    expect(overlay).not.toBeNull()
-    expect(getComputedStyle(overlay).pointerEvents).toBe('none')
-    expect(overlay.getAttribute('aria-hidden')).toBe('true')
+    expect(screen.getAllByText('What is your favourite colour?').length).toBe(1)
   })
 
-  it('8. countdown continues ticking while overlay mounted', () => {
+  it('8. countdown continues ticking while animating', () => {
     vi.useFakeTimers()
     try {
       renderComponent()
       const before = screen.getByText(/^\d+s$/).textContent
-      act(() => { vi.advanceTimersByTime(2800) })
+      act(() => { vi.advanceTimersByTime(2000) })
       const after = screen.getByText(/^\d+s$/).textContent
       expect(before).not.toBe(after)
     } finally {

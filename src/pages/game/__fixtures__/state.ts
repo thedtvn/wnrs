@@ -18,6 +18,7 @@ const lobbyBase: GameState = {
   players: [p1, p2],
   readyIds: ['p2'],
   spectatorIds: [],
+  spectatorInfos: [],
   disconnectedIds: [],
   settings: defaultSettings,
   phase: 'lobby',

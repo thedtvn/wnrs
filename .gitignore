@@ -3,6 +3,8 @@
 
 # build output
 /dist
+/dist-server
+/dist-test
 /.vite
 
 # wrangler local state

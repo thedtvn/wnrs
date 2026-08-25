@@ -48,6 +48,7 @@ export interface GameState {
   players: PlayerInfo[]
   readyIds: string[]
   spectatorIds: string[]
+  spectatorInfos: PlayerInfo[]
   disconnectedIds: string[]
   settings: GameSettings
   phase: GamePhase
@@ -71,6 +72,7 @@ export type ClientMessage =
   | { type: 'revealNext' }
   | { type: 'rateAnswer'; targetId: string; rating: number }
   | { type: 'nextQuestion' }
+  | { type: 'endGame' }
 
 export type ServerMessage =
   | { type: 'state'; state: GameState }

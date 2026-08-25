@@ -43,7 +43,7 @@ function AppInner() {
         <Text fontSize="lg" fontWeight="bold" textTransform="uppercase">Authentication Failed</Text>
         <Text fontSize="sm" opacity={0.7}>{error}</Text>
         <Button
-          onClick={closeActivity}
+          onClick={() => closeActivity()}
           marginTop="4"
         >
           Close
