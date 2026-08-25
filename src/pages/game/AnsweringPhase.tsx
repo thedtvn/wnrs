@@ -1,0 +1,134 @@
+import { useEffect, useRef, useState } from 'react'
+import { Box, Button as ChakraButton, Stack, Text, Textarea } from '@chakra-ui/react'
+import { Button } from '@src/components/ui/button'
+import { CardDraw } from '@src/components/card3d'
+import { useDiscord } from '@src/discord/DiscordContext'
+import type { useGameSync } from '@src/hooks/useGameSync'
+import type { GameState } from '@src/shared/types'
+import { TimerBar } from './TimerBar'
+import { QuestionCard } from './QuestionCard'
+import { useCountdown } from './useCountdown'
+
+export function AnsweringPhase({
+  state, sync, amHost, isSpectator, t,
+}: {
+  state: GameState
+  sync: ReturnType<typeof useGameSync>
+  amHost: boolean
+  isSpectator: boolean
+  t: (k: string) => string
+}) {
+  const [answer, setAnswer] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const timeLeft = useCountdown(state.round?.deadline ?? null, sync.clockOffset)
+  const total = state.settings.answerSeconds
+  const myId = useDiscord().user?.id
+
+  const hasSubmitted = myId ? (state.round?.answers[myId] !== undefined) : false
+
+  const handleSubmit = () => {
+    if (!answer.trim() || hasSubmitted) return
+    sync.sendSubmitAnswer(answer.trim())
+    setSubmitted(true)
+  }
+
+  const totalPlayers = state.players.filter(p => !state.spectatorIds.includes(p.id)).length
+  const answeredCount = Object.keys(state.round?.answers ?? {}).length
+
+  const prevRoundNumber = useRef<number | null>(null)
+  const [showDraw, setShowDraw] = useState(false)
+
+  useEffect(() => {
+    if (state.phase !== 'answering') return
+    if (prevRoundNumber.current === state.roundNumber) return
+    prevRoundNumber.current = state.roundNumber
+    setShowDraw(true)
+  }, [state.phase, state.roundNumber])
+
+  return (
+    <Stack align="center" gap="4" w="full">
+      <TimerBar timeLeft={timeLeft} total={total} />
+
+      <Box
+        position="relative"
+        w="full"
+        maxW={{ base: '260px', md: '300px' }}
+        mx="auto"
+        overflow="hidden"
+        borderRadius="22px"
+        visibility={showDraw ? 'hidden' : 'visible'}
+      >
+        <QuestionCard question={state.round?.question ?? ''} />
+        {showDraw && (
+          <Box
+            data-testid="card-draw-overlay"
+            position="absolute"
+            inset="0"
+            overflow="hidden"
+            borderRadius="l3"
+            pointerEvents="none"
+            zIndex={10}
+            aria-hidden="true"
+          >
+            <CardDraw
+              question={state.round?.question ?? ''}
+              durationMs={2800}
+              onDone={() => setShowDraw(false)}
+            />
+          </Box>
+        )}
+      </Box>
+
+      {isSpectator ? (
+        <Text color="fg.muted" fontSize="sm">{t('common.spectator')}</Text>
+      ) : hasSubmitted || submitted ? (
+        <Stack align="center" gap="2">
+          <Text color="success.fg" fontWeight="semibold" m={0}>✓ {t('answering.submitted')}</Text>
+          <Text color="fg.muted" fontSize="sm" m={0}>{answeredCount} of {totalPlayers} answered</Text>
+        </Stack>
+      ) : (
+        <>
+          <Box position="relative" w="full" bg="surface" borderRadius="15px" p="4">
+            <Textarea
+              value={answer}
+              onChange={e => setAnswer(e.target.value)}
+              maxLength={500}
+              placeholder={t('answering.yourAnswer')}
+              rows={3}
+              resize="none"
+              p="0"
+              bg="transparent"
+              borderWidth={0}
+              color="fg.default"
+              fontSize="13px"
+              lineHeight="relaxed"
+              _placeholder={{ color: 'fg.muted' }}
+              _focusVisible={{ outline: 'none', boxShadow: 'none' }}
+            />
+            <Text position="absolute" bottom="2" right="3" fontSize="xs" color="fg.muted">
+              {answer.length}/500
+            </Text>
+          </Box>
+          <Button minWidth="150px" onClick={handleSubmit} disabled={!answer.trim()}>
+            {t('answering.submit')}
+          </Button>
+        </>
+      )}
+
+      {hasSubmitted && (
+        <Text color="fg.muted" fontSize="sm" m={0}>{t('answering.waitingForOthers')}</Text>
+      )}
+
+      {amHost && (
+        <ChakraButton
+          variant="ghost"
+          minHeight="44px"
+          color="fg.muted"
+          onClick={() => sync.sendRevealNext()}
+        >
+          {t('answering.skipToReveal')}
+        </ChakraButton>
+      )}
+    </Stack>
+  )
+}

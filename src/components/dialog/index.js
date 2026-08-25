@@ -1,5 +1,0 @@
-export { default as Dialog } from "./Dialog"
-export { default as LinkDialog } from "./LinkDialog"
-export { default as DeckDialog } from "./DeckDialog"
-export { default as HelpDialog } from "./HelpDialog"
-export { default as ThemeDialog } from "./ThemeDialog"

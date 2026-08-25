@@ -1,0 +1,17 @@
+node_modules
+dist
+dist-server
+.git
+.idea
+.github
+.codegraph
+.omo
+docs
+README.md
+.env
+.env.*
+.dev.vars
+*.log
+Dockerfile
+.dockerignore
+docker-compose.yml

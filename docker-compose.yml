@@ -1,0 +1,15 @@
+services:
+  wnrs:
+    build:
+      context: .
+      args:
+        VITE_DISCORD_CLIENT_ID: ${VITE_DISCORD_CLIENT_ID:-}
+    image: wnrs:latest
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    restart: unless-stopped

@@ -1,0 +1,112 @@
+{
+  "lobby": {
+    "title": "Lobby",
+    "waitingForPlayers": "Waiting for all players to ready up...",
+    "allReady": "All players must be ready to start.",
+    "readyUp": "Ready Up",
+    "unready": "Unready",
+    "spectate": "Spectate",
+    "joinAsPlayer": "Join as Player",
+    "startGame": "Start Game",
+    "hostSettings": "Host Settings",
+    "answerTime": "Answer Time (s)",
+    "ratingTime": "Rating Time (s)",
+    "totalRounds": "Total Rounds",
+    "decks": "Decks",
+    "transferHost": "Transfer Host",
+    "makeHost": "Make Host",
+    "level": "Level",
+    "levelAll": "All Levels"
+  },
+  "answering": {
+    "yourAnswer": "Your answer",
+    "submit": "Submit",
+    "submitted": "Submitted!",
+    "timeLeft": "Time left",
+    "waitingForOthers": "Waiting for other players...",
+    "skipToReveal": "Skip to reveal"
+  },
+  "revealing": {
+    "revealNext": "Reveal Next",
+    "skipVoting": "Skip voting",
+    "waitingForHost": "Waiting for the host to reveal the next answer...",
+    "submittedPlayers": "Submitted Players",
+    "revealed": "revealed",
+    "answerBy": "Answer by"
+  },
+  "rating": {
+    "playerVote": "Player Vote",
+    "playerVoted": "Player Voted",
+    "rate": "Rate this answer",
+    "timeLeft": "Time left",
+    "submitted": "Rated!",
+    "noEligibleRaters": "No one else to rate this answer",
+    "othersRating": "Others are rating your answer...",
+    "yourRating": "Your rating"
+  },
+  "scoring": {
+    "roundWinner": "Round Winner",
+    "nextQuestion": "Next Question",
+    "joinGame": "Join Game",
+    "attractedBy": "Found this answer attractive",
+    "youAttracted": "You found this attractive",
+    "noAttractions": "No attraction points this round"
+  },
+  "finished": {
+    "gameOver": "Game Over!",
+    "highestRated": "Highest Rated Answer",
+    "noAnswers": "No answers were submitted",
+    "attractionPoints": "Attraction Points",
+    "noAttractions": "No attraction points across all rounds"
+  },
+  "common": {
+    "mainPage": "Main Page",
+    "host": "HOST",
+    "spectator": "SPECTATOR",
+    "loading": "Loading...",
+    "error": "Error",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "save": "Save",
+    "close": "Close"
+  },
+  "midgame": {
+    "title": "Game in Progress",
+    "description": "A game is already running. What would you like to do?",
+    "host": "Host",
+    "players": "players",
+    "joinSpectate": "Watch as Spectator",
+    "backToHome": "Back to Home"
+  },
+  "home": {
+    "newGame": "New Game",
+    "join": "Join",
+    "enterCode": "Room code"
+  },
+  "decks": {
+    "main": "Main Card Game",
+    "family": "Family Edition",
+    "couples": "Couples Edition",
+    "honestDating": "Honest Dating Expansion",
+    "relationship": "Relationship Expansion",
+    "innerCircle": "Inner Circle Expansion",
+    "ownIt": "Own It Expansion",
+    "breakup": "Breakup Edition",
+    "healing": "Healing Edition",
+    "forgiveness": "Forgiveness Edition",
+    "selfReflection": "Self-Reflection Edition",
+    "selfLove": "Self-Love Edition",
+    "exfriend": "Ex-Friend Edition",
+    "sneakyLink": "Sneaky Link Edition",
+    "quarantine": "Quarantine Edition",
+    "raceAndPrivilege": "Race and Privilege Edition",
+    "voting": "Voting Edition",
+    "bumbleDate": "Bumble Date",
+    "bumbleBFF": "Bumble BFF",
+    "bumbleBizz": "Bumble Bizz",
+    "cann": "Cann Edition",
+    "valentino": "Valentino Edition",
+    "hbomax": "HBO Max Edition"
+  }
+}

@@ -1,0 +1,1 @@
+export const ATTRACTIVE_THRESHOLD = 7

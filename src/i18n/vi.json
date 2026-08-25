@@ -1,0 +1,112 @@
+{
+  "lobby": {
+    "title": "Phòng chờ",
+    "waitingForPlayers": "Đang chờ tất cả người chơi sẵn sàng...",
+    "allReady": "Tất cả người chơi phải sẵn sàng để bắt đầu.",
+    "readyUp": "Sẵn sàng",
+    "unready": "Chưa sẵn sàng",
+    "spectate": "Xem",
+    "joinAsPlayer": "Tham gia chơi",
+    "startGame": "Bắt đầu",
+    "hostSettings": "Cài đặt chủ phòng",
+    "answerTime": "Thời gian trả lời (giây)",
+    "ratingTime": "Thời gian đánh giá (giây)",
+    "totalRounds": "Tổng số vòng",
+    "decks": "Bộ bài",
+    "transferHost": "Chuyển chủ phòng",
+    "makeHost": "Đặt làm chủ phòng",
+    "level": "Cấp",
+    "levelAll": "Tất cả cấp"
+  },
+  "answering": {
+    "yourAnswer": "Câu trả lời của bạn",
+    "submit": "Gửi",
+    "submitted": "Đã gửi!",
+    "timeLeft": "Thời gian còn lại",
+    "waitingForOthers": "Đang chờ người chơi khác...",
+    "skipToReveal": "Bỏ qua để tiết lộ"
+  },
+  "revealing": {
+    "revealNext": "Tiết lộ tiếp",
+    "skipVoting": "Bỏ qua đánh giá",
+    "waitingForHost": "Đang chờ chủ phòng tiết lộ câu trả lời tiếp theo...",
+    "submittedPlayers": "Người đã gửi",
+    "revealed": "đã tiết lộ",
+    "answerBy": "Câu trả lời của"
+  },
+  "rating": {
+    "playerVote": "Lượt đánh giá",
+    "playerVoted": "Đã đánh giá",
+    "rate": "Đánh giá câu trả lời này",
+    "timeLeft": "Thời gian còn lại",
+    "submitted": "Đã đánh giá!",
+    "noEligibleRaters": "Không có ai khác để đánh giá câu trả lời này",
+    "othersRating": "Người khác đang đánh giá câu trả lời của bạn...",
+    "yourRating": "Đánh giá của bạn"
+  },
+  "scoring": {
+    "roundWinner": "Người thắng vòng",
+    "nextQuestion": "Câu hỏi tiếp theo",
+    "joinGame": "Tham gia chơi",
+    "attractedBy": "Thấy câu trả lời này hấp dẫn",
+    "youAttracted": "Bạn thấy hấp dẫn",
+    "noAttractions": "Không có điểm thu hút nào vòng này"
+  },
+  "finished": {
+    "gameOver": "Trò chơi kết thúc!",
+    "highestRated": "Câu trả lời được đánh giá cao nhất",
+    "noAnswers": "Không có câu trả lời nào",
+    "attractionPoints": "Điểm thu hút",
+    "noAttractions": "Không có điểm thu hút nào qua các vòng"
+  },
+  "common": {
+    "mainPage": "Trang chủ",
+    "host": "CHỦ PHÒNG",
+    "spectator": "NGƯỜI XEM",
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "connecting": "Đang kết nối...",
+    "connected": "Đã kết nối",
+    "disconnected": "Mất kết nối",
+    "save": "Lưu",
+    "close": "Đóng"
+  },
+  "midgame": {
+    "title": "Trò chơi đang diễn ra",
+    "description": "Một trò chơi đã bắt đầu. Bạn muốn làm gì?",
+    "host": "Chủ phòng",
+    "players": "người chơi",
+    "joinSpectate": "Xem với tư cách người xem",
+    "backToHome": "Quay về trang chủ"
+  },
+  "home": {
+    "newGame": "Tạo Phòng",
+    "join": "Tham Gia",
+    "enterCode": "Mã phòng"
+  },
+  "decks": {
+    "main": "Bộ Bài Chính",
+    "family": "Phiên Bản Gia Đình",
+    "couples": "Phiên Bản Đôi",
+    "honestDating": "Mở Rộng Hẹn Hò Thành Thật",
+    "relationship": "Mở Rộng Mối Quan Hệ",
+    "innerCircle": "Mở Rộng Vòng Trong",
+    "ownIt": "Mở Rộng Sở Hữu Nó",
+    "breakup": "Phiên Bản Chia Tay",
+    "healing": "Phiên Bản Chữa Lành",
+    "forgiveness": "Phiên Bản Tha Thứ",
+    "selfReflection": "Phiên Bản Tự Chiêm nghiệm",
+    "selfLove": "Phiên Bản Tự Yêu",
+    "exfriend": "Phiên Bản Bạn Bè Cũ",
+    "sneakyLink": "Phiên Bản Bí Mật",
+    "quarantine": "Phiên Bản Cách Ly",
+    "raceAndPrivilege": "Phiên Bản Chủng Tộc & Đặc Quyền",
+    "voting": "Phiên Bản Bầu Cử",
+    "bumbleDate": "Bumble Date",
+    "bumbleBFF": "Bumble BFF",
+    "bumbleBizz": "Bumble Bizz",
+    "cann": "Phiên Bản Cann",
+    "valentino": "Phiên Bản Valentino",
+    "hbomax": "Phiên Bản HBO Max"
+  }
+}
