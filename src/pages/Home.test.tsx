@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { renderWithChakra, screen, cleanup, fireEvent } from '@src/test/utils'
+import { act, renderWithChakra, screen, cleanup, fireEvent } from '@src/test/utils'
 import Home from './Home'
+import { setLocale } from '@src/i18n'
 import { useDiscord } from '@src/discord/DiscordContext'
-import { setLocale, LOCALE_EVENT } from '@src/i18n'
 import * as router from '@src/client/router'
 
 vi.mock('@src/discord/DiscordContext', () => ({
@@ -38,8 +38,7 @@ describe('Home', () => {
   it('toggles EN to VI', () => {
     renderWithChakra(<Home />)
     expect(screen.getByText('New Game')).toBeInTheDocument()
-    const toggleBtn = screen.getByRole('button', { name: /VI|EN/ })
-    fireEvent.click(toggleBtn)
+    act(() => { setLocale('vi') })
     
     // should appear after locale change
     expect(screen.getByText('Tạo Phòng')).toBeInTheDocument()

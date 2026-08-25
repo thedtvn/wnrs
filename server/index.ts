@@ -49,6 +49,28 @@ app.post('/api/token', async (req, res) => {
     return
   }
 
+  const instanceId = typeof req.body?.instance_id === 'string' && req.body.instance_id.length
+    ? req.body.instance_id
+    : null
+
+  if (instanceId && DISCORD_BOT_TOKEN) {
+    try {
+      const instanceRes = await fetch(
+        `https://discord.com/api/applications/${DISCORD_CLIENT_ID}/activity-instances/${instanceId}`,
+        { headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` } },
+      )
+      if (!instanceRes.ok) {
+        console.error('[token] activity instance not found:', instanceId, instanceRes.status)
+        res.status(401).json({ error: 'Invalid activity instance' })
+        return
+      }
+    } catch (err) {
+      console.error('[token] instance verification failed:', err)
+      res.status(502).json({ error: 'Instance verification failed' })
+      return
+    }
+  }
+
   try {
     const response = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -84,7 +106,7 @@ app.post('/api/token', async (req, res) => {
     const jwt = await signJwt({
       sub: discordUser.id,
       name: discordUser.global_name ?? discordUser.username ?? 'Player',
-      instance: null,
+      instance: instanceId,
     })
     res.json({ access_token, jwt })
   } catch (err) {

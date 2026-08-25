@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Badge, Box, Flex, Heading, Input, Slider, Stack, Text } from '@chakra-ui/react'
+import { createListCollection, Select, Badge, Box, Flex, Heading, Input, Slider, Stack, Text } from '@chakra-ui/react'
 import { Button } from '@src/components/ui/button'
 import { Avatar } from '@src/components/ui/avatar'
 import { DeckSelector } from '@src/components/DeckSelector'
 import { DECK_REGISTRY } from '@src/decks/registry'
 import { PlayerCircleGrid } from './PlayerCircleGrid'
+import { useLocale } from '@src/hooks/useLocale'
 import type { useGameSync } from '@src/hooks/useGameSync'
 import type { GameState, GameSettings } from '@src/shared/types'
+
+const langCollection = createListCollection<{ label: string; value: 'en' | 'vi' }>({
+  items: [
+    { label: '🇬🇧 English', value: 'en' },
+    { label: '🇻🇳 Tiếng Việt', value: 'vi' },
+  ],
+})
 
 export function LobbyPhase({
   state, sync, amHost, isSpectator, userId, t, locale,
@@ -20,6 +28,7 @@ export function LobbyPhase({
   locale: 'en' | 'vi'
 }) {
   const [showSettings, setShowSettings] = useState(false)
+  const { setLocale } = useLocale()
   const [confirmTarget, setConfirmTarget] = useState<string | null>(null)
   const [settings, setSettings] = useState<GameSettings>(state.settings)
 
@@ -33,11 +42,6 @@ export function LobbyPhase({
 
   useEffect(() => { setSettings({ ...state.settings, locale }) }, [state.settings, locale])
 
-  const decksCard = (
-    <Box w="full" bg="surface.card" borderRadius="l3" p="4">
-      <DeckSelector selected={selectedDecks} readOnly />
-    </Box>
-  )
 
   const playersCircleGrid = (
     <PlayerCircleGrid
@@ -127,148 +131,42 @@ export function LobbyPhase({
     </Flex>
   )
 
-  const playersCard = (
-    <Box w="full" bg="surface.card" borderRadius="l3" p="4">
-      {state.players.map(p => {
-        const canTransfer = amHost && p.id !== state.hostId && !state.spectatorIds.includes(p.id)
-        return (
-          <Box
-            key={p.id}
-            position="relative"
-            role="group"
-            borderRadius="l2"
-            _hover={{ bg: 'whiteAlpha.100' }}
-          >
-            <Flex alignItems="center" gap="3" py="2.5" minHeight="48px">
-              <Avatar name={p.name} avatar={p.avatar} size="md" />
-              <Text color="fg.default" flex="1" fontSize="sm" fontWeight="semibold" lineClamp={1} m={0}>
-                {p.name}
-              </Text>
-              <Badge
-                borderRadius="full"
-                px="2.5"
-                py="1"
-                fontSize="sm"
-                fontWeight="semibold"
-                bg={
-                  p.id === state.hostId ? 'accent.subtle'
-                    : state.readyIds.includes(p.id) ? 'success.subtle'
-                    : 'whiteAlpha.200'
-                }
-                color={
-                  p.id === state.hostId ? 'accent.fg'
-                    : state.readyIds.includes(p.id) ? 'success.fg'
-                    : 'fg.muted'
-                }
-              >
-                {p.id === state.hostId ? t('common.host') : state.readyIds.includes(p.id) ? '✓' : '...'}
-              </Badge>
-            </Flex>
-            {canTransfer && (
-              <Button
-                variant="secondary"
-                size="sm"
-                position="absolute"
-                right="2"
-                top="50%"
-                transform="translateY(-50%)"
-                opacity={{ base: 1, lg: 0 }}
-                _groupHover={{ opacity: 1 }}
-                _focusVisible={{ opacity: 1 }}
-                transition="opacity 150ms"
-                bg="surface.raised"
-                onClick={() => setConfirmTarget(confirmTarget === p.id ? null : p.id)}
-                aria-label={`${t('lobby.makeHost')}: ${p.name}`}
-              >
-                {t('lobby.makeHost')}
-              </Button>
-            )}
-          </Box>
-        )
-      })}
-      {state.spectatorIds.length > 0 && (
-        <Text color="fg.muted" fontSize="sm" mt="2" m={0}>
-          {state.spectatorIds.length} {t('common.spectator').toLowerCase()}
-        </Text>
-      )}
-    </Box>
-  )
-
-  const settingsPanel = (
-    <Stack gap="4">
-      <Box w="full" bg="surface.card" borderRadius="l3" p="4">
-        <DeckSelector
-          selected={selectedDecks}
-          onChange={next => sync.sendSetSettings({ ...settings, selectedDecks: next })}
-        />
+  return (
+    <Box position="relative" w="full">
+      <Box position="absolute" top="0" right="0" minWidth="120px">
+        <Select.Root
+          collection={langCollection}
+          size="sm"
+          value={[locale]}
+          onValueChange={e => setLocale(e.value[0] as 'en' | 'vi')}
+          positioning={{ placement: 'bottom-end' }}
+        >
+          <Select.HiddenSelect aria-label="Language" />
+          <Select.Control>
+            <Select.Trigger
+              minHeight="40px"
+              borderRadius="l2"
+              bg="surface.raised"
+              borderColor="border.subtle"
+              color="fg.default"
+            >
+              <Select.ValueText />
+            </Select.Trigger>
+            <Select.Indicator />
+          </Select.Control>
+          <Select.Positioner>
+            <Select.Content bg="surface" borderColor="border.subtle">
+              {langCollection.items.map(item => (
+                <Select.Item item={item} key={item.value} fontSize="sm" color="fg.default">
+                  {item.label}
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
+        </Select.Root>
       </Box>
 
-      <Stack w="full" bg="surface.card" borderRadius="l3" p="4" gap="4">
-        <Stack gap="3">
-          <Text color="fg.muted" fontSize="sm" m={0}>
-            {t('lobby.answerTime')}{' '}
-            <Text as="span" color="fg.default" ml="2" fontWeight="semibold">{settings.answerSeconds}s</Text>
-          </Text>
-          <Slider.Root
-            min={10}
-            max={300}
-            step={10}
-            value={[settings.answerSeconds]}
-            onValueChange={e => setSettings(s => ({ ...s, answerSeconds: e.value[0] }))}
-            colorPalette="brand"
-            w="full"
-          >
-            <Slider.Control>
-              <Slider.Track><Slider.Range /></Slider.Track>
-              <Slider.Thumb index={0} />
-            </Slider.Control>
-          </Slider.Root>
-
-          <Text color="fg.muted" fontSize="sm" m={0}>
-            {t('lobby.ratingTime')}{' '}
-            <Text as="span" color="fg.default" ml="2" fontWeight="semibold">{settings.ratingSeconds}s</Text>
-          </Text>
-          <Slider.Root
-            min={5}
-            max={120}
-            step={5}
-            value={[settings.ratingSeconds]}
-            onValueChange={e => setSettings(s => ({ ...s, ratingSeconds: e.value[0] }))}
-            colorPalette="brand"
-            w="full"
-          >
-            <Slider.Control>
-              <Slider.Track><Slider.Range /></Slider.Track>
-              <Slider.Thumb index={0} />
-            </Slider.Control>
-          </Slider.Root>
-
-          <Text as="label" color="fg.muted" fontSize="sm" m={0}>
-            {t('lobby.totalRounds')}{' '}
-            <Input
-              type="number"
-              min={0}
-              max={50}
-              value={settings.totalRounds}
-              onChange={e => setSettings(s => ({ ...s, totalRounds: +e.target.value }))}
-              width="16"
-              ml="2"
-              display="inline-block"
-              size="sm"
-            />
-            <Text as="span" color="fg.muted" ml="1">(0 = unlimited)</Text>
-          </Text>
-        </Stack>
-
-        <Button width="full" onClick={() => { sync.sendSetSettings(settings); setShowSettings(false) }}>
-          {t('common.save')}
-        </Button>
-      </Stack>
-    </Stack>
-  )
-
-  return (
-    <>
       <Heading as="h2" fontSize="3xl" fontWeight="semibold" color="fg.default" m={0} textAlign="center">
         {t('lobby.title')}
       </Heading>
@@ -433,6 +331,6 @@ export function LobbyPhase({
           </Box>
         </Box>
       )}
-    </>
+    </Box>
   )
 }

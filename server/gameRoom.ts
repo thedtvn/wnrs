@@ -41,9 +41,7 @@ setQuestionProvider((settings, roundNumber) => {
   for (const slug of settings.selectedDecks) {
     const deck = DECK_MAP[slug]
     if (!deck) continue
-    const q = locale === 'vi' && deck.questions_vi
-      ? deck.questions_vi
-      : deck.questions
+    const q = deck.questions
     for (let lvl = 0; lvl < q.length; lvl++) {
       if (!allQuestions[lvl]) allQuestions[lvl] = []
       allQuestions[lvl].push(...q[lvl])
@@ -296,6 +294,19 @@ export const attachGameRooms = (
           jwtPayload = await verifyJwt(rawJwt)
         } catch (err) {
           console.error('[GameRoom] JWT verification failed:', err)
+          socket.disconnect(true)
+          return
+        }
+        if (
+          roomId.startsWith('discord:') &&
+          jwtPayload.instance &&
+          jwtPayload.instance !== roomId.slice('discord:'.length)
+        ) {
+          console.error(
+            '[GameRoom] instance mismatch: jwt =', jwtPayload.instance,
+            'room =', roomId,
+          )
+          socket.emit('error', { message: 'Room does not match your activity instance' })
           socket.disconnect(true)
           return
         }

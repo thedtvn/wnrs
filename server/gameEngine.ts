@@ -3,6 +3,7 @@ import type {
   GamePhase,
   GameSettings,
   GameState,
+  PlayerInfo,
 } from '../src/shared/types'
 
 // ---------------------------------------------------------------------------

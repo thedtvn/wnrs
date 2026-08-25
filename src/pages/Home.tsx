@@ -4,7 +4,14 @@ import { useDiscord } from '@src/discord/DiscordContext'
 import { useLocale } from '@src/hooks/useLocale'
 import { navigate } from '@src/client/router'
 import type { GameRoute } from '@src/client/router'
-import { Flex, Text, Heading, Input } from '@chakra-ui/react'
+import { Box, createListCollection, Flex, Text, Heading, Input, Select } from '@chakra-ui/react'
+
+const langCollection = createListCollection<{ label: string; value: 'en' | 'vi' }>({
+  items: [
+    { label: '🇬🇧 English', value: 'en' },
+    { label: '🇻🇳 Tiếng Việt', value: 'vi' },
+  ],
+})
 
 export default function Home() {
   const { user, instanceId, mode } = useDiscord()
@@ -34,21 +41,39 @@ export default function Home() {
 
   return (
     <Flex as="main" direction="column" alignItems="center" justifyContent="center" h="full" gap="8" padding="6" position="relative" bg="bg.canvas">
-      <Button
-        variant="ghost"
-        position="absolute"
-        top="4"
-        right="4"
-        minWidth="44px"
-        minHeight="44px"
-        size="sm"
-        borderWidth="1px"
-        borderColor="border.subtle"
-        bg="surface.raised"
-        onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}
-      >
-        {locale === 'en' ? '🇻🇳 VI' : '🇬🇧 EN'}
-      </Button>
+      <Box position="absolute" top="4" right="4" minWidth="140px">
+        <Select.Root
+          collection={langCollection}
+          size="sm"
+          value={[locale]}
+          onValueChange={e => setLocale(e.value[0] as 'en' | 'vi')}
+          positioning={{ placement: 'bottom-end' }}
+        >
+          <Select.HiddenSelect aria-label="Language" />
+          <Select.Control>
+            <Select.Trigger
+              minHeight="44px"
+              borderRadius="l2"
+              bg="surface.raised"
+              borderColor="border.subtle"
+              color="fg.default"
+            >
+              <Select.ValueText />
+            </Select.Trigger>
+            <Select.Indicator />
+          </Select.Control>
+          <Select.Positioner>
+            <Select.Content bg="surface" borderColor="border.subtle">
+              {langCollection.items.map(item => (
+                <Select.Item item={item} key={item.value} fontSize="sm" color="fg.default">
+                  {item.label}
+                  <Select.ItemIndicator />
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Positioner>
+        </Select.Root>
+      </Box>
 
       <Flex direction="column" alignItems="center" textAlign="center">
         <Heading fontSize={{ base: '3xl', sm: '4xl' }} fontWeight="bold" color="fg.default" letterSpacing="tight" lineHeight="tight">

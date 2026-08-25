@@ -88,6 +88,9 @@ export function DiscordProvider({ children }: { children: ReactNode }) {
     const setup = async () => {
       const discordSdk = new DiscordSDK(CLIENT_ID)
       sdkRef.current = discordSdk
+      await discordSdk.commands.setConfig({
+        use_interactive_pip: false
+      })
       await withTimeout(discordSdk.ready(), 15000)
 
       const { code } = await discordSdk.commands.authorize({
@@ -102,7 +105,7 @@ export function DiscordProvider({ children }: { children: ReactNode }) {
       const tokenRes = await fetch(isProxy ? '/.proxy/api/token' : '/api/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, instance_id: discordSdk.instanceId }),
       })
       if (!tokenRes.ok) throw new Error(`token exchange failed (${tokenRes.status})`)
       const { access_token, jwt: token } = (await tokenRes.json()) as { access_token?: string; jwt?: string }

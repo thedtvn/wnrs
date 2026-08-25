@@ -1,7 +1,6 @@
 import type { Deck } from '@src/shared/types'
 
 import mainJson from './mainDeck/main.json'
-import mainViJson from './mainDeck/main_vi.json'
 
 import familyJson from './expansion/family.json'
 import couplesJson from './expansion/couples.json'
@@ -29,11 +28,7 @@ import cannJson from './crossover/cann.json'
 import valentinoJson from './crossover/valentino.json'
 import hbomaxJson from './crossover/hboMax.json'
 
-function mergeLocale(base: Deck, localeJson: Partial<Deck>): Deck {
-  return { ...base, ...localeJson }
-}
-
-export const main: Deck = mergeLocale(mainJson, mainViJson as Partial<Deck>)
+export const main: Deck = mainJson
 
 export const family: Deck = familyJson
 export const couples: Deck = couplesJson
