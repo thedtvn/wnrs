@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Box, Button as ChakraButton, Stack, Text, Textarea } from '@chakra-ui/react'
+import { Box, Stack, Text, Textarea } from '@chakra-ui/react'
 import { Button } from '@src/components/ui/button'
 import { useDiscord } from '@src/discord/DiscordContext'
 import type { useGameSync } from '@src/hooks/useGameSync'
@@ -16,7 +16,7 @@ const CARD_IN_CSS = `
 `
 
 export function AnsweringPhase({
-  state, sync, amHost, isSpectator, t,
+  state, sync, isSpectator, t,
 }: {
   state: GameState
   sync: ReturnType<typeof useGameSync>
@@ -106,16 +106,6 @@ export function AnsweringPhase({
         <Text color="fg.muted" fontSize="sm" m={0}>{t('answering.waitingForOthers')}</Text>
       )}
 
-      {amHost && (
-        <ChakraButton
-          variant="ghost"
-          minHeight="44px"
-          color="fg.muted"
-          onClick={() => sync.sendRevealNext()}
-        >
-          {t('answering.skipToReveal')}
-        </ChakraButton>
-      )}
     </Stack>
   )
 }

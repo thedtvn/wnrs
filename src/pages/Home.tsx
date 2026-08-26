@@ -5,13 +5,17 @@ import { useLocale } from '@src/hooks/useLocale'
 import { navigate } from '@src/client/router'
 import type { GameRoute } from '@src/client/router'
 import { Box, createListCollection, Flex, Text, Heading, Input, Select } from '@chakra-ui/react'
+import GB from 'country-flag-icons/react/3x2/GB'
+import VN from 'country-flag-icons/react/3x2/VN'
 
 const langCollection = createListCollection<{ label: string; value: 'en' | 'vi' }>({
   items: [
-    { label: '🇬🇧 English', value: 'en' },
-    { label: '🇻🇳 Tiếng Việt', value: 'vi' },
+    { label: 'English', value: 'en' },
+    { label: 'Tiếng Việt', value: 'vi' },
   ],
 })
+
+const languageFlags = { en: GB, vi: VN }
 
 export default function Home() {
   const { user, instanceId, mode } = useDiscord()
@@ -41,7 +45,12 @@ export default function Home() {
 
   return (
     <Flex as="main" direction="column" alignItems="center" justifyContent="center" h="full" gap="8" padding="6" position="relative" bg="bg.canvas">
-      <Box position="absolute" top="4" right="4" minWidth="140px">
+      <Box
+        position="absolute"
+        top={{ base: 'calc(env(safe-area-inset-top) + 64px)', sm: '4' }}
+        right={{ base: 'calc(env(safe-area-inset-right) + 4px)', sm: '4' }}
+        width="56px"
+      >
         <Select.Root
           collection={langCollection}
           size="sm"
@@ -53,20 +62,27 @@ export default function Home() {
           <Select.Control>
             <Select.Trigger
               minHeight="44px"
+              justifyContent="center"
               borderRadius="l2"
               bg="surface.raised"
               borderColor="border.subtle"
               color="fg.default"
             >
-              <Select.ValueText />
+              {(() => {
+                const Flag = languageFlags[locale]
+                return <Flag title={langCollection.items.find(item => item.value === locale)?.label} style={{ width: '28px' }} />
+              })()}
             </Select.Trigger>
-            <Select.Indicator />
           </Select.Control>
           <Select.Positioner>
             <Select.Content bg="surface" borderColor="border.subtle">
               {langCollection.items.map(item => (
-                <Select.Item item={item} key={item.value} fontSize="sm" color="fg.default">
-                  {item.label}
+                <Select.Item item={item} key={item.value} gap="2" aria-label={item.label}>
+                  {(() => {
+                    const Flag = languageFlags[item.value]
+                    return <Flag aria-hidden="true" style={{ width: '28px', flexShrink: 0 }} />
+                  })()}
+                  <Select.ItemText>{item.label}</Select.ItemText>
                   <Select.ItemIndicator />
                 </Select.Item>
               ))}

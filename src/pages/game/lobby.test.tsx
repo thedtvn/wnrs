@@ -96,6 +96,7 @@ describe('LobbyPhase', () => {
     expect(arg.totalRounds).toBe(5)
     expect(arg.answerSeconds).toBe(60)
     expect(arg.ratingSeconds).toBe(30)
+    expect(screen.queryByRole('button', { name: 'common.save' })).not.toBeInTheDocument()
   })
 
   it('renders readOnly DeckSelector for non-hosts', () => {

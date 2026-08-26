@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { DiscordSDK, RPCCloseCodes } from '@discord/embedded-app-sdk'
 import type { PlayerInfo } from '@src/shared/types'
 
-export type DiscordMode = 'connecting' | 'discord' | 'standalone'
+export type DiscordMode = 'connecting' | 'discord' | 'error'
 
 interface DiscordContextValue {
   mode: DiscordMode
@@ -16,7 +16,7 @@ interface DiscordContextValue {
 }
 
 const DiscordContext = createContext<DiscordContextValue>({
-  mode: 'standalone',
+  mode: 'connecting',
   user: null,
   instanceId: null,
   channelId: null,
@@ -27,17 +27,6 @@ const DiscordContext = createContext<DiscordContextValue>({
 
 export const useDiscord = () => useContext(DiscordContext)
 
-const GUEST_ID_KEY = 'wnrs-guest-id'
-
-const getGuestUser = (): PlayerInfo => {
-  let id = localStorage.getItem(GUEST_ID_KEY)
-  if (!id) {
-    id = `guest-${crypto.randomUUID()}`
-    localStorage.setItem(GUEST_ID_KEY, id)
-  }
-  return { id, name: 'Player' }
-}
-
 const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
   Promise.race([
     promise,
@@ -46,19 +35,9 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
 
 const CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined
 
-const isInsideIframe = (): boolean => {
-  try {
-    return window.parent !== window
-  } catch {
-    return true
-  }
-}
-
 export function DiscordProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<DiscordMode>(
-    CLIENT_ID ? 'connecting' : 'standalone'
-  )
-  const [user, setUser] = useState<PlayerInfo | null>(CLIENT_ID ? null : getGuestUser())
+  const [mode, setMode] = useState<DiscordMode>('connecting')
+  const [user, setUser] = useState<PlayerInfo | null>(null)
   const [instanceId, setInstanceId] = useState<string | null>(null)
   const [channelId, setChannelId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -67,28 +46,36 @@ export function DiscordProvider({ children }: { children: ReactNode }) {
   const setupStarted = useRef(false)
 
   const closeActivity = useCallback((reason?: string, code?: number) => {
+    const discordSdk = sdkRef.current
+    if (!discordSdk) {
+      window.close()
+      return
+    }
+
     try {
-      sdkRef.current?.close(
+      discordSdk.close(
         (code ?? RPCCloseCodes.CLOSE_NORMAL) as RPCCloseCodes,
         reason ?? 'You exited from app',
       )
     } catch {
-      try {
-        window.close()
-      } catch {
-        // cross-origin iframe — nothing else to do
-      }
+      window.close()
     }
   }, [])
 
   useEffect(() => {
-    if (!CLIENT_ID || setupStarted.current) return
+    if (setupStarted.current) return
     setupStarted.current = true
+
+    if (!CLIENT_ID) {
+      setError('VITE_DISCORD_CLIENT_ID is not configured')
+      setMode('error')
+      return
+    }
 
     const setup = async () => {
       const discordSdk = new DiscordSDK(CLIENT_ID)
       sdkRef.current = discordSdk
-      await discordSdk.commands.setConfig({
+      discordSdk.commands.setConfig({
         use_interactive_pip: false
       })
       await withTimeout(discordSdk.ready(), 15000)
@@ -126,13 +113,14 @@ export function DiscordProvider({ children }: { children: ReactNode }) {
 
       setInstanceId(discordSdk.instanceId ?? null)
       setChannelId(discordSdk.channelId ?? null)
-      setUser({ id: auth.user?.id ?? getGuestUser().id, name, avatar: avatarUrl })
+      setUser({ id: auth.user?.id ?? 'unknown', name, avatar: avatarUrl })
       setMode('discord')
     }
 
     setup().catch((err) => {
       console.error('[Discord Auth]', err)
       setError(err instanceof Error ? err.message : 'Discord authentication failed')
+      setMode('error')
     })
   }, [])
 

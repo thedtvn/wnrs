@@ -8,13 +8,17 @@ import { PlayerCircleGrid } from './PlayerCircleGrid'
 import { useLocale } from '@src/hooks/useLocale'
 import type { useGameSync } from '@src/hooks/useGameSync'
 import type { GameState, GameSettings } from '@src/shared/types'
+import GB from 'country-flag-icons/react/3x2/GB'
+import VN from 'country-flag-icons/react/3x2/VN'
 
 const langCollection = createListCollection<{ label: string; value: 'en' | 'vi' }>({
   items: [
-    { label: '🇬🇧 English', value: 'en' },
-    { label: '🇻🇳 Tiếng Việt', value: 'vi' },
+    { label: 'English', value: 'en' },
+    { label: 'Tiếng Việt', value: 'vi' },
   ],
 })
+
+const languageFlags = { en: GB, vi: VN }
 
 export function LobbyPhase({
   state, sync, amHost, isSpectator, userId, t, locale,
@@ -132,8 +136,14 @@ export function LobbyPhase({
   )
 
   return (
-    <Box position="relative" w="full">
-      <Box position="absolute" top="0" right="0" minWidth="120px">
+    <>
+      <Box
+        position="fixed"
+        top={{ base: 'calc(env(safe-area-inset-top) + 64px)', sm: '4' }}
+        right={{ base: 'calc(env(safe-area-inset-right) + 4px)', sm: '4' }}
+        zIndex={40}
+        width="56px"
+      >
         <Select.Root
           collection={langCollection}
           size="sm"
@@ -145,20 +155,27 @@ export function LobbyPhase({
           <Select.Control>
             <Select.Trigger
               minHeight="40px"
+              justifyContent="center"
               borderRadius="l2"
               bg="surface.raised"
               borderColor="border.subtle"
               color="fg.default"
             >
-              <Select.ValueText />
+              {(() => {
+                const Flag = languageFlags[locale]
+                return <Flag title={langCollection.items.find(item => item.value === locale)?.label} style={{ width: '28px' }} />
+              })()}
             </Select.Trigger>
-            <Select.Indicator />
           </Select.Control>
           <Select.Positioner>
             <Select.Content bg="surface" borderColor="border.subtle">
               {langCollection.items.map(item => (
-                <Select.Item item={item} key={item.value} fontSize="sm" color="fg.default">
-                  {item.label}
+                <Select.Item item={item} key={item.value} gap="2" aria-label={item.label}>
+                  {(() => {
+                    const Flag = languageFlags[item.value]
+                    return <Flag aria-hidden="true" style={{ width: '28px', flexShrink: 0 }} />
+                  })()}
+                  <Select.ItemText>{item.label}</Select.ItemText>
                   <Select.ItemIndicator />
                 </Select.Item>
               ))}
@@ -167,14 +184,17 @@ export function LobbyPhase({
         </Select.Root>
       </Box>
 
-      <Heading as="h2" fontSize="3xl" fontWeight="semibold" color="fg.default" m={0} textAlign="center">
-        {t('lobby.title')}
-      </Heading>
+      <Box position="relative" w="full">
+        <Heading as="h2" fontSize="3xl" fontWeight="semibold" color="fg.default" m={0} textAlign="center">
+          {t('lobby.title')}
+        </Heading>
 
-      {playersCircleGrid}
+        <Box mt="8">
+          {playersCircleGrid}
+        </Box>
 
-      <Stack align="center" gap="4" w="full">
-        {selectedDeckPills}
+        <Stack align="center" gap="4" w="full" mt="8">
+          {selectedDeckPills}
 
         {amHost ? (
           <Flex gap="3" wrap="wrap" justify="center">
@@ -323,7 +343,13 @@ export function LobbyPhase({
                   </Text>
                 </Stack>
 
-                <Button width="full" onClick={() => sync.sendSetSettings(settings)}>
+                <Button
+                  width="full"
+                  onClick={() => {
+                    sync.sendSetSettings(settings)
+                    setShowSettings(false)
+                  }}
+                >
                   {t('common.save')}
                 </Button>
               </Stack>
@@ -331,6 +357,7 @@ export function LobbyPhase({
           </Box>
         </Box>
       )}
-    </Box>
+      </Box>
+    </>
   )
 }

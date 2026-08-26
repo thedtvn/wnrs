@@ -112,6 +112,6 @@ export function useGameSync(roomId: string, user: PlayerInfo | null, jwt?: strin
     sendRevealNext: () => emit({ type: 'revealNext' }),
     sendRateAnswer: (targetId, rating) => emit({ type: 'rateAnswer', targetId, rating }),
     sendNextQuestion: () => emit({ type: 'nextQuestion' }),
-  sendEndGame: () => emit({ type: 'endGame' }),
+    sendEndGame: () => emit({ type: 'endGame' }),
   }
 }

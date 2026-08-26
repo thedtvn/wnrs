@@ -112,21 +112,28 @@ describe('ScoringPhase', () => {
 })
 
 describe('FinishedPhase', () => {
-  it('aggregates attractions across roundHistory with a stable pair key', () => {
+  it('shows only the highest-rated answers grouped under their questions', () => {
     const base = lobbyState()
     const r1 = {
       question: 'q1', deadline: null,
       answers: { p1: 'a1', p2: 'b1' },
-      ratings: { p1: { p2: 8 }, p2: { p1: 3 } },
+      ratings: { p1: { p2: 10 }, p2: { p1: 3 } },
       revealedAnswerIds: ['p1', 'p2'], currentRevealId: null,
     }
     const r2 = {
       ...r1,
+      question: 'q2',
       answers: { p1: 'a2', p2: 'b2' },
-      ratings: { p2: { p1: 8 } },
+      ratings: { p2: { p1: 10 } },
     }
     const s: GameState = { ...base, phase: 'finished', round: null, roundHistory: [r1, r2], roundNumber: 2 }
     renderWithChakra(<FinishedPhase state={s} onExit={() => {}} t={t} />)
-    expect(screen.getByText(/2×/)).toBeInTheDocument()
+    expect(screen.getByText('q1')).toBeInTheDocument()
+    expect(screen.getByText('q2')).toBeInTheDocument()
+    expect(screen.getByText('P1 - "a1"')).toBeInTheDocument()
+    expect(screen.getByText('P2 - "b2"')).toBeInTheDocument()
+    expect(screen.queryByText('P2 - "b1"')).not.toBeInTheDocument()
+    expect(screen.queryByText('P1 - "a2"')).not.toBeInTheDocument()
+    expect(screen.queryByText('finished.attractionPoints')).not.toBeInTheDocument()
   })
 })

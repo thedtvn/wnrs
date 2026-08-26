@@ -59,6 +59,10 @@ describe('isClientMessage', () => {
     expect(isClientMessage({ type: 'nextQuestion' })).toBe(true)
   })
 
+  it('validates endGame with no payload', () => {
+    expect(isClientMessage({ type: 'endGame' })).toBe(true)
+  })
+
   it('rejects unknown and malformed', () => {
     expect(isClientMessage({ type: 'bogus' })).toBe(false)
     expect(isClientMessage(null)).toBe(false)

@@ -37,7 +37,7 @@ function AppInner() {
     )
   }
 
-  if (mode === 'discord' && error) {
+  if (error) {
     return (
       <Flex as="main" h="100vh" alignItems="center" justifyContent="center" flexDirection="column" gap="4" padding="8" textAlign="center" bg="bg.canvas" color="fg.default">
         <Text fontSize="lg" fontWeight="bold" textTransform="uppercase">Authentication Failed</Text>

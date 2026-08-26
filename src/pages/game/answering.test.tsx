@@ -66,15 +66,9 @@ describe('AnsweringPhase', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 
-  it('shows the host skip button only for the host', () => {
-    const { unmount } = renderWithChakra(
-      <AnsweringPhase state={answeringState()} sync={makeSync()} amHost={true} isSpectator={false} t={t} />,
-    )
-    expect(screen.getByRole('button', { name: 'answering.skipToReveal' })).toBeInTheDocument()
-    unmount()
-    cleanup()
+  it('does not show a manual reveal control while answers auto-transition', () => {
     renderWithChakra(
-      <AnsweringPhase state={answeringState()} sync={makeSync()} amHost={false} isSpectator={false} t={t} />,
+      <AnsweringPhase state={answeringState()} sync={makeSync()} amHost={true} isSpectator={false} t={t} />,
     )
     expect(screen.queryByRole('button', { name: 'answering.skipToReveal' })).not.toBeInTheDocument()
   })

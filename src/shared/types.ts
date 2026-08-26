@@ -117,6 +117,7 @@ export function isClientMessage(data: unknown): data is ClientMessage {
     case 'unspectate':
     case 'revealNext':
     case 'nextQuestion':
+    case 'endGame':
       return true
     default:
       return false
